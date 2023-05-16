@@ -17,16 +17,16 @@ public class RequestUtils {
 
     public static void validateRequestKey(Map<String, Map> content) throws JsonProcessingException {
         Map<String, Map> applicationJSON = content.get("application/json");
-        if (applicationJSON == null) {
-            throw new JsonProcessingException("content字段 缺少 application/json 字段") {
-            };
-        }
-
-        Map<String, Map> schema = applicationJSON.get("schema");
-        if (schema == null) {
-            throw new JsonProcessingException("content字段 application/json 缺少 schema 字段") {
-            };
-        }
+//        if (applicationJSON == null) {
+//            throw new JsonProcessingException("content字段 缺少 application/json 字段") {
+//            };
+//        }
+//
+//        Map<String, Map> schema = applicationJSON.get("schema");
+//        if (schema == null) {
+//            throw new JsonProcessingException("content字段 application/json 缺少 schema 字段") {
+//            };
+//        }
 
 //
 //        if (schema.get("$ref") == null) {

@@ -1,47 +1,76 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta http-equiv="Content-Type" content="application/msword; charset=utf-8"/>
     <title>toWord</title>
-        <style type="text/css">
-        .bg {
-            font-size: 14.5px;
+    <style type="text/css">
+        .table-title {
+            text-align: center;
             font-weight: bold;
-            color: #000;
-            background-color: #559e68;
+            font-size: 12pt;
+            mso-font-kerning: 1pt;
+            background: rgb(231, 230, 230);
+            font-family: 黑体;
         }
+
+        .cell-title {
+            mso-style-name: 正文缩进;
+            margin: 0 0 0;
+            text-indent: 0;
+            mso-char-indent-count: 0;
+            mso-pagination: none;
+            text-align: center;
+            text-justify: inter-ideograph;
+            line-height: 125%;
+            font-family: "Times New Roman";
+            mso-fareast-font-family: 宋体;
+            font-size: 12pt;
+            mso-font-kerning: 1pt;
+            width: 25%;
+        }
+
 
         table {
-            border-width: 1px;
-            border-style: solid;
-            border-color: black;
-            table-layout: fixed;
+            border-collapse: collapse;
+            width: 100%;
+            mso-table-layout-alt: fixed;
+            border: none;
+            mso-border-alt: 0.5pt solid windowtext;
+            mso-padding-alt: 0 5.4pt 0 5.4pt;
         }
 
-        tr {
-            height: 32px;
-            font-size: 12px;
-        }
-
-        td {
-            padding-left: 10px;
-            border-width: 1px;
-            border-style: solid;
-            border-color: black;
-            height: 32px;
-            overflow: hidden;
-            word-break: break-all;
-            word-wrap: break-word;
-            font-size: 14.5px;
-        }
-
-        .bg td {
-            font-size: 14.5px;
-        }
 
         tr td {
-            font-size: 14.5px;
+            height: 20.4pt;
+            border: 1pt solid windowtext;
+            font-family: 宋体;
+            mso-ascii-font-family: 'Times New Roman';
+            mso-hansi-font-family: 'Times New Roman';
+            mso-bidi-font-family: 'Times New Roman';
+
         }
+
+        /*tr {*/
+        /*    height: 20.4pt;*/
+        /*    font-size: 12px;*/
+        /*}*/
+
+        /*td {*/
+        /*    padding-left: 10px;*/
+        /*    border-width: 1px;*/
+        /*    border-style: solid;*/
+        /*    border-color: black;*/
+        /*    overflow: hidden;*/
+        /*    word-break: break-all;*/
+        /*    word-wrap: break-word;*/
+        /*    font-size: 14.5px;*/
+        /*}*/
+
+
+        /*tr td {*/
+        /*    font-size: 14.5px;*/
+        /*}*/
 
         .specialHeight {
             height: 40px;
@@ -92,39 +121,51 @@
             <!--这个是每个请求的说明，方便生成文档后进行整理-->
             <h5 class="second_title" th:text="${tableStat.count} + '）' + ${table.tag}"></h5>
 
-            <table border="1" cellspacing="0" cellpadding="0" width="100%">
-                <tr class="bg">
-                    <td colspan="5" th:text="${table.tag}"></td>
+            <table
+
+            >
+                <tr>
+                    <td colspan="5" class="table-title" th:text="${table.tag}">
+                    </td>
+                    <!--                    <td colspan="5" class="table-title">-->
+                    <!--                        测试-->
+                    <!--                    </td>-->
+
                 </tr>
                 <tr>
-                    <td width="25%">接口描述</td>
+                    <td class="cell-title">接口描述</td>
                     <td colspan="4" th:text="${table.description}"></td>
                 </tr>
                 <tr>
-                    <td>URL</td>
+                    <td class="cell-title">URL</td>
                     <td colspan="4" th:text="${table.url}"></td>
                 </tr>
                 <tr>
-                    <td>请求方式</td>
+                    <td class="cell-title">请求方式</td>
                     <td colspan="4" th:text="${table.requestType}"></td>
                 </tr>
                 <tr>
-                    <td>请求类型</td>
+                    <td class="cell-title">请求类型</td>
                     <td colspan="4" th:text="${table.requestForm}"></td>
                 </tr>
                 <tr>
-                    <td>返回类型</td>
+                    <td class="cell-title">返回类型</td>
                     <td colspan="4" th:text="${table.responseForm}"></td>
                 </tr>
 
-                <tr class="bg">
-                    <td>参数名</td>
-                    <td width="15%">数据类型</td>
-                    <td width="15%">参数类型</td>
-                    <td width="15%">是否必填</td>
-                    <td width="29%">说明</td>
-                </tr>
 
+                <tr>
+                    <td colspan="5" class="table-title">
+                        请求参数(Parameters)
+                    </td>
+                </tr>
+                <tr>
+                    <td>参数名</td>
+                    <td style="width: 15%">数据类型</td>
+                    <td style="width: 15%">参数类型</td>
+                    <td style="width: 15%">是否必填</td>
+                    <td style="width: 29%">说明</td>
+                </tr>
                 <th:block th:each="request, c:${table.requestList}">
                     <tr>
                         <td align="left" th:text="${c.count} + '.' + ${request.name}"></td>
@@ -133,45 +174,48 @@
                         <td th:if="${request.require}" th:text="Y"></td>
                         <td th:if="${!request.require}" th:text="N"></td>
                         <td th:text="${request.remark}"></td>
-                        <!--                        <td th:if="${request.modelAttr}" th:text="asdfagadfg"></td>-->
+                        <th:block th:if="${request.modelAttr}">
+                            <tbody th:include="this::request(${request.modelAttr.properties},${c.count} + '.', 1)"/>
+                        </th:block>
                     </tr>
-                    <th:block th:if="${request.modelAttr}">
-                        <tbody th:include="this::request(${request.modelAttr.properties},${c.count} + '.', 1)"/>
-                    </th:block>
-
-
                 </th:block>
-
-                <tr class="bg">
+                <tr>
+                    <td colspan="5" class="table-title">
+                        请求状态(StatusCode)
+                    </td>
+                </tr>
+                <tr>
                     <td>状态码</td>
                     <td colspan="2">描述</td>
                     <td colspan="2">说明</td>
                 </tr>
-
                 <tr th:each="response:${table.responseList}">
                     <td th:text="${response.name}"></td>
                     <td colspan="2" th:text="${response.description}"></td>
                     <td colspan="2" th:text="${response.remark}"></td>
                 </tr>
-
-                <tr class="bg">
-                    <td>返回属性名</td>
-                    <td colspan="2">类型</td>
+                <tr class="table-title">
+                    <td colspan="5">返回参数(ResponseBody)</td>
+                </tr>
+                <tr class="cell-title">
+                    <td>属性名</td>
+                    <td colspan="2">数据类型</td>
                     <td colspan="2">说明</td>
                 </tr>
 
-<!--               对返回参数 递归生成行-->
+                <!--               对返回参数 递归生成行-->
                 <tbody th:include="this::response(${table.modelAttr.properties},'', 1)"/>
 
-                <tr class="bg">
-                    <td colspan="5">示例</td>
+                <tr class="table-title">
+                    <td colspan="5">示例(Example)</td>
                 </tr>
-                <tr class="specialHeight">
-                    <td class="bg">请求参数</td>
+
+                <tr>
+                    <td class="cell-title">请求参数</td>
                     <td colspan="4" th:text="${table.requestParam}"></td>
                 </tr>
-                <tr class="specialHeight">
-                    <td class="bg">返回值</td>
+                <tr>
+                    <td class="cell-title">返回参数</td>
                     <td colspan="4" th:text="${table.responseParam}"></td>
                 </tr>
 
@@ -209,4 +253,5 @@
     </th:block>
 </th:block>
 </body>
+
 </html>

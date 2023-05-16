@@ -20,15 +20,8 @@ import org.word.utils.ResponseUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -192,9 +185,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
 
                         result.add(table);
                     } catch (Exception e) {
-                        StringWriter sw = new StringWriter();
-                        PrintWriter pw = new PrintWriter(sw);
-                        e.printStackTrace(pw);
+                        e.printStackTrace();
                         throw new JsonProcessingException(url + "接口格式不正确: " + requestType + "请求 " + e.getMessage()) {
                         };
                     }
@@ -213,6 +204,9 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
         if (requestBody != null) {
             Map<String, Map> content = (LinkedHashMap) requestBody.get("content");
             Set keys = content.keySet();
+            if (keys.size() == 1 && keys.contains("*/*")) {
+                return new ArrayList<>(Collections.singletonList("application/json"));
+            }
             return new ArrayList<String>(keys);
         }
         return requestTypes;
@@ -228,6 +222,9 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
         List<String> responseTypes = new ArrayList();
         if (content != null) {
             Set keys = content.keySet();
+            if (keys.size() == 1 && keys.contains("*/*")) {
+                return new ArrayList<>(Collections.singletonList("application/json"));
+            }
             return new ArrayList<String>(keys);
         }
         return responseTypes;
@@ -249,9 +246,9 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
                 Request request = new Request();
                 request.setName(String.valueOf(param.get("name")));
 
-                Map<String, String> schema1 = (Map) param.get("schema");
+                Map<String, String> schema1 = (Map) param.getOrDefault("schema", new HashMap<>());
 
-                request.setType(schema1 == null ? " " : schema1.get("type").toString());
+                request.setType(schema1 == null ? " " : schema1.getOrDefault("type", ""));
                 // request.setType(param.get("type") == null ? "object" : param.get("type").toString());
                 if (param.get("format") != null) {
                     request.setType(request.getType() + "(" + param.get("format") + ")");
@@ -283,14 +280,17 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
         }
 
         if (requestBody != null) {
-            Map<String, Map> content = (LinkedHashMap) requestBody.get("content");
+            Map<String, Map> content = ((Map<String, Map>) requestBody.getOrDefault("content", new HashMap<>()))
+                    .entrySet()
+                    .stream().filter(entry -> StringUtils.equals("application/json", entry.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-            try {
-                RequestUtils.validateRequestKey(content);
-            } catch (Exception e) {
-                throw new JsonProcessingException("requestybody 字段 " + e.getMessage()) {
-                };
-            }
+//            try {
+//                RequestUtils.validateRequestKey(content);
+//            } catch (Exception e) {
+//                throw new JsonProcessingException("requestybody 字段 " + e.getMessage()) {
+//                };
+//            }
 
             Iterator<Map.Entry<String, Map>> applications = content.entrySet().iterator();
             while (applications.hasNext()) {
@@ -354,15 +354,18 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             LinkedHashMap<String, Object> statusCodeInfo = (LinkedHashMap) entry.getValue();
             response.setDescription(String.valueOf(statusCodeInfo.get("description")));
 
-            Map<String, Map> content = (Map) statusCodeInfo.get("content");
-
+//            Map<String, Map> content = (Map) statusCodeInfo.get("content");
+            Map<String, Map> content = ((Map<String, Map>) statusCodeInfo.getOrDefault("content", new HashMap<>()))
+                    .entrySet()
+                    .stream().filter(e -> StringUtils.equals("application/json", e.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             if (content != null) {
-                try {
-                    ResponseUtils.validateResponseKey(content);
-                } catch (Exception e) {
-                    throw new JsonProcessingException("response字段 " + entry.getKey() + "字段 " + e.getMessage()) {
-                    };
-                }
+//                try {
+//                    ResponseUtils.validateResponseKey(content);
+//                } catch (Exception e) {
+//                    throw new JsonProcessingException("response字段 " + entry.getKey() + "字段 " + e.getMessage()) {
+//                    };
+//                }
                 // responses内容application多个遍历处理
                 Iterator<Map.Entry<String, Map>> applications = content.entrySet().iterator();
 
@@ -380,9 +383,8 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
                 }
             } else {
                 String ref = String.valueOf(statusCodeInfo.get("$ref"));
-
-                if (ref != "") {
-                    ModelAttr modelAttr = definitinMap.get(ref);
+                ModelAttr modelAttr = definitinMap.get(ref);
+                if (modelAttr != null) {
                     response.setDescription(modelAttr.getDescription());
                 }
 
@@ -495,10 +497,11 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
         } else if (resMap.get("#/components/" + parentName + "/" + modeName) != null) {
             return resMap.get("#/components/" + parentName + "/" + modeName);
         }
-        Map<String, Object> modeProperties = (Map<String, Object>) swaggerMap.get(modeName).get("properties");
+
+        Map<String, Object> modeProperties = (Map<String, Object>) swaggerMap.getOrDefault(modeName, new HashMap<>()).get("properties");
         List<ModelAttr> attrList = new ArrayList<>();
         // 获取required字段，遍历properties添加是否必填属性
-        ArrayList modeRequired = (ArrayList) swaggerMap.get(modeName).get("required");
+        ArrayList modeRequired = (ArrayList) swaggerMap.getOrDefault(modeName, new HashMap<>()).get("required");
 
         if (modeProperties != null) {
             Iterator<Entry<String, Object>> mIt = modeProperties.entrySet().iterator();
@@ -538,8 +541,8 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             }
         }
 
-        Object title = swaggerMap.get(modeName).get("title");
-        Object description = swaggerMap.get(modeName).get("description");
+        Object title = swaggerMap.getOrDefault(modeName, new HashMap<>()).get("title");
+        Object description = swaggerMap.getOrDefault(modeName, new HashMap<>()).get("description");
         modeAttr.setClassName(title == null ? "" : title.toString());
         modeAttr.setDescription(description == null ? "" : description.toString());
         modeAttr.setProperties(attrList);
@@ -760,6 +763,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
     private String processRequestParam(List<Request> list) throws IOException {
         Map<String, Object> headerMap = new LinkedHashMap<>();
         Map<String, Object> queryMap = new LinkedHashMap<>();
+        Map<String, Object> pathMap = new LinkedHashMap<>();
         Map<String, Object> jsonMap = new LinkedHashMap<>();
         if (list != null && list.size() > 0) {
             for (Request request : list) {
@@ -774,7 +778,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
                         queryMap.put(name, value);
                         break;
                     case "path":
-                        queryMap.put(name, value);
+                        pathMap.put(name, value);
                         break;
                     case "body":
                         //TODO 根据content-type序列化成不同格式，目前只用了json
@@ -787,13 +791,17 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             }
         }
         String res = "";
-        if (!queryMap.isEmpty()) {
-            res += getUrlParamsByMap(queryMap);
-        }
         if (!headerMap.isEmpty()) {
-            res += " " + getHeaderByMap(headerMap);
+            res += "header: " + getHeaderByMap(headerMap) + " ";
+        }
+        if (!pathMap.isEmpty()) {
+            res = "path: " + getPathVariableByMap(pathMap) + " ";
+        }
+        if (!queryMap.isEmpty()) {
+            res += "query: " + getUrlParamsByMap(queryMap) + " ";
         }
         if (!jsonMap.isEmpty()) {
+            res += "body: ";
             if (jsonMap.size() == 1) {
                 for (Entry<String, Object> entry : jsonMap.entrySet()) {
                     res += " '" + JsonUtils.writeJsonStr(entry.getValue()) + "'";
@@ -801,6 +809,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             } else {
                 res += " '" + JsonUtils.writeJsonStr(jsonMap) + "'";
             }
+            res += " ";
         }
         return res;
     }
@@ -853,6 +862,23 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             default:
                 return null;
         }
+    }
+
+    public static String getPathVariableByMap(Map<String, Object> map) {
+        if (map == null || map.isEmpty()) {
+            return "";
+        }
+        StringBuffer sb = new StringBuffer();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue());
+            sb.append(",");
+        }
+        String s = sb.toString();
+        if (s.endsWith(",")) {
+            s = StringUtils.substringBeforeLast(s, "&");
+        }
+        return s;
+
     }
 
     /**
