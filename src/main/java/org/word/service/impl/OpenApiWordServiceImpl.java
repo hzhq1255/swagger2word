@@ -69,12 +69,12 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             // log.debug(JsonUtils.writeJsonStr(resultMap));
         } catch (Exception e) {
             log.error("parse error", e);
-        	throw e;
+            throw e;
         }
         return resultMap;
     }
 
-	@Override
+    @Override
     public Map<String, Object> tableList(MultipartFile jsonFile) throws IOException {
         Map<String, Object> resultMap = new HashMap<>();
         try {
@@ -83,7 +83,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             // log.debug(JsonUtils.writeJsonStr(resultMap));
         } catch (Exception e) {
             log.error("parse error", e);
-        	throw e;
+            throw e;
         }
         return resultMap;
     }
@@ -119,84 +119,85 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
                 String url = path.getKey();
                 String requestType = null;
                 while (it2.hasNext()) {
-                	try {
-                		Entry<String, Object> request = it2.next();
+                    try {
+                        Entry<String, Object> request = it2.next();
 
-                		// 2.请求方式，类似为 get,post,delete,put 这样
-                		requestType = request.getKey();
+                        // 2.请求方式，类似为 get,post,delete,put 这样
+                        requestType = request.getKey();
 
-                		if ("parameters".equals(requestType)) {
-                			continue;
-                		}
+                        if ("parameters".equals(requestType)) {
+                            continue;
+                        }
 
-                		Map<String, Object> content = (Map<String, Object>) request.getValue();
+                        Map<String, Object> content = (Map<String, Object>) request.getValue();
 
-                		// 4. 大标题（类说明）
-                		String title = String.valueOf(((List) content.get("tags")).get(0));
+                        // 4. 大标题（类说明）
+                        String title = String.valueOf(((List) content.get("tags")).get(0));
 
-                		// 5.小标题 （方法说明）
-                		String tag = String.valueOf(content.get("operationId"));
+                        // 5.小标题 （方法说明）
+                        String tag = String.valueOf(content.get("operationId"));
 
-                		// 6.接口描述
-                		Object descObj = content.get("description");
-                		String description = descObj == null ? "" : descObj.toString();
+                        // 6.接口描述
+                        Object descObj = content.get("description");
+                        String description = descObj == null ? "" : descObj.toString();
 
-                		// 7. 请求体
-                		List<LinkedHashMap> parameters = (ArrayList) content.get("parameters");
+                        // 7. 请求体
+                        List<LinkedHashMap> parameters = (ArrayList) content.get("parameters");
 
-                		if (!CollectionUtils.isEmpty(parameters)) {
-                			if (commonParameters != null) {
-                				parameters.addAll(commonParameters);
-                			}
-                		} else {
-                			if (commonParameters != null) {
-                				parameters = commonParameters;
-                			}
-                		}
+                        if (!CollectionUtils.isEmpty(parameters)) {
+                            if (commonParameters != null) {
+                                parameters.addAll(commonParameters);
+                            }
+                        } else {
+                            if (commonParameters != null) {
+                                parameters = commonParameters;
+                            }
+                        }
 
-                		// 8.返回体
-                		Map<String, Object> responses = (LinkedHashMap) content.get("responses");
+                        // 8.返回体
+                        Map<String, Object> responses = (LinkedHashMap) content.get("responses");
 
-                		// 9.请求参数格式，类似于 multipart/form-data
-                		List<String> requestParamsFormates = getRequestParamsFormate(content);
-                		String requestForm = StringUtils.join(requestParamsFormates, ",");
+                        // 9.请求参数格式，类似于 multipart/form-data
+                        List<String> requestParamsFormates = getRequestParamsFormate(content);
+                        String requestForm = StringUtils.join(requestParamsFormates, ",");
 
-                		// 取出来状态是200时的返回值
-                		Map<String, Object> obj = (Map<String, Object>) responses.get("200");
-                		Map<String, Object> requestBody = (Map<String, Object>) content.get("requestBody");
+                        // 取出来状态是200时的返回值
+                        Map<String, Object> obj = (Map<String, Object>) responses.get("200");
+                        Map<String, Object> requestBody = (Map<String, Object>) content.get("requestBody");
 
-                		// 10.返回参数格式，类似于 application/json
-                		List<String> responseParamsFormates = getResponseParamsFormate(obj);
-                		String responseForm = StringUtils.join(responseParamsFormates, ",");
+                        // 10.返回参数格式，类似于 application/json
+                        List<String> responseParamsFormates = getResponseParamsFormate(obj);
+                        String responseForm = StringUtils.join(responseParamsFormates, ",");
 
-                		//封装Table
-                		Table table = new Table();
+                        //封装Table
+                        Table table = new Table();
 
-                		table.setTitle(title);
-                		table.setUrl(url);
-                		table.setTag(tag);
-                		table.setDescription(description);
-                		table.setRequestForm(requestForm);
-                		table.setResponseForm(responseForm);
-                		table.setRequestType(requestType);
-                		table.setRequestList(processRequestList(parameters, requestBody, definitinMap));
+                        table.setTitle(title);
+                        table.setUrl(url);
+                        table.setTag(tag);
+                        table.setDescription(description);
+                        table.setRequestForm(requestForm);
+                        table.setResponseForm(responseForm);
+                        table.setRequestType(requestType);
+                        table.setRequestList(processRequestList(parameters, requestBody, definitinMap));
 
-                		table.setResponseList(processResponseCodeList(responses, definitinMap));
-                		if (obj != null && obj.get("content") != null) {
-                			table.setModelAttr(processResponseModelAttrs(obj, definitinMap));
-                		}
+                        table.setResponseList(processResponseCodeList(responses, definitinMap));
+                        if (obj != null && obj.get("content") != null) {
+                            table.setModelAttr(processResponseModelAttrs(obj, definitinMap));
+                        }
 
-                		//示例
-                		table.setRequestParam(processRequestParam(table.getRequestList()));
-                		table.setResponseParam(processResponseParam1(obj, definitinMap));
+                        //示例
+                        table.setRequestParam(processRequestParam(table.getRequestList()));
+                        table.setResponseParam(processResponseParam1(obj, definitinMap));
 
-                		result.add(table);
-                	} catch (Exception e) {
-                		StringWriter sw = new StringWriter();
-                		PrintWriter pw = new PrintWriter(sw);
-                		e.printStackTrace(pw);
-                		throw new JsonProcessingException(url + "接口格式不正确: " + requestType + "请求 " + e.getMessage()) {};
-                	}
+                        result.add(table);
+                    } catch (Exception e) {
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+                        e.printStackTrace(pw);
+                        throw new JsonProcessingException(url + "接口格式不正确: " + requestType + "请求 " + e.getMessage()) {
+                        };
+                    }
                 }
             }
         }
@@ -219,6 +220,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
 
     /**
      * 返回参数格式，类似于 application/json
+     *
      * @throws Exception
      */
     private List<String> getResponseParamsFormate(Map<String, Object> responseObj) {
@@ -284,9 +286,10 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             Map<String, Map> content = (LinkedHashMap) requestBody.get("content");
 
             try {
-            	RequestUtils.validateRequestKey(content);
-            } catch(Exception e) {
-            	throw new JsonProcessingException("requestybody 字段 " + e.getMessage()) {};
+                RequestUtils.validateRequestKey(content);
+            } catch (Exception e) {
+                throw new JsonProcessingException("requestybody 字段 " + e.getMessage()) {
+                };
             }
 
             Iterator<Map.Entry<String, Map>> applications = content.entrySet().iterator();
@@ -296,9 +299,11 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
                 if (application.getValue() != null) {
                     Request request = new Request();
 
-                    Map<String, Object> schema = (Map<String, Object>) application.getValue().get("schema");
+                    Map<String, Object> schema = (Map<String, Object>) application.getValue().getOrDefault("schema", new HashMap<>());
                     request.setName(" ");
-                    request.setType(schema == null ? " " : schema.get("type").toString());
+                    if (schema.get("type") != null) {
+                        request.setType(String.valueOf(schema.get("type")));
+                    }
                     request.setParamType("body");
 
                     Object ref = schema.get("$ref");
@@ -338,7 +343,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
      * @param responses 全部状态码返回对象
      * @return
      */
-    private List<Response> processResponseCodeList(Map<String, Object> responses,  Map<String, ModelAttr> definitinMap ) throws JsonProcessingException  {
+    private List<Response> processResponseCodeList(Map<String, Object> responses, Map<String, ModelAttr> definitinMap) throws JsonProcessingException {
         List<Response> responseList = new ArrayList<>();
         Iterator<Map.Entry<String, Object>> resIt = responses.entrySet().iterator();
         while (resIt.hasNext()) {
@@ -352,11 +357,12 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             Map<String, Map> content = (Map) statusCodeInfo.get("content");
 
             if (content != null) {
-            	try {
-            		ResponseUtils.validateResponseKey(content);
-            	} catch(Exception e) {
-            		throw new JsonProcessingException("response字段 " + entry.getKey() + "字段 " + e.getMessage()) {};
-            	}
+                try {
+                    ResponseUtils.validateResponseKey(content);
+                } catch (Exception e) {
+                    throw new JsonProcessingException("response字段 " + entry.getKey() + "字段 " + e.getMessage()) {
+                    };
+                }
                 // responses内容application多个遍历处理
                 Iterator<Map.Entry<String, Map>> applications = content.entrySet().iterator();
 
