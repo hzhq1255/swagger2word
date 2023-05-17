@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
@@ -200,16 +201,16 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
      */
     private List<String> getRequestParamsFormate(Map<String, Object> obj) {
         Map<String, Object> requestBody = (LinkedHashMap) obj.get("requestBody");
-        List<String> requestTypes = new ArrayList();
         if (requestBody != null) {
             Map<String, Map> content = (LinkedHashMap) requestBody.get("content");
             Set keys = content.keySet();
             if (keys.size() == 1 && keys.contains("*/*")) {
-                return new ArrayList<>(Collections.singletonList("application/json"));
+                return new ArrayList<>(Collections.singletonList(MediaType.APPLICATION_JSON_VALUE));
             }
-            return new ArrayList<String>(keys);
+            return new ArrayList<>(keys);
+        } else {
+            return new ArrayList<>(Collections.singletonList("application/x-www-form-urlencoded"));
         }
-        return requestTypes;
     }
 
     /**
@@ -225,7 +226,7 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             if (keys.size() == 1 && keys.contains("*/*")) {
                 return new ArrayList<>(Collections.singletonList("application/json"));
             }
-            return new ArrayList<String>(keys);
+            return new ArrayList<>(keys);
         }
         return responseTypes;
     }
