@@ -36,16 +36,14 @@
 
         table {
             border-collapse: collapse;
-            width: 100%;
+            /*width: 100%;*/
+            width: 400pt;
             mso-table-layout-alt: fixed;
             border: none;
             mso-border-alt: 0.5pt solid windowtext;
             mso-padding-alt: 0 5.4pt 0 5.4pt;
         }
 
-        td {
-            width: 820pt;
-        }
 
         tr td {
             height: 20.4pt;
@@ -188,8 +186,8 @@
                     <td colspan="2" th:text="${response.description}"></td>
                     <td colspan="2" th:text="${response.remark}"></td>
                 </tr>
-                <tr class="table-title">
-                    <td colspan="5">返回参数(ResponseBody)</td>
+                <tr>
+                    <td class="table-title" colspan="5">返回参数(ResponseBody)</td>
                 </tr>
                 <tr class="cell-title">
                     <td>属性名</td>
@@ -200,17 +198,22 @@
                 <!--               对返回参数 递归生成行-->
                 <tbody th:include="this::response(${table.modelAttr.properties},'', 1)"/>
 
-                <tr class="table-title">
-                    <td colspan="5">示例(Example)</td>
+                <tr>
+                    <td colspan="5" class="table-title">示例(Example)</td>
                 </tr>
 
                 <tr>
                     <td class="cell-title">请求参数</td>
-                    <td colspan="4" th:text="${table.requestParam}"></td>
+                    <td colspan="4">
+                    <span th:utext="${#strings.unescapeJava(#strings.replace(#strings.escapeJava(table.requestParam),'\n','&lt;br/&gt;'))}">
+                    </span>
+                    </td>
                 </tr>
                 <tr>
                     <td class="cell-title">返回参数</td>
-                    <td colspan="4" th:text="${table.responseParam}"></td>
+                    <td colspan="4">
+                        <span th:utext="${#strings.unescapeJava(#strings.replace(#strings.escapeJava(table.responseParam),'\n','&lt;br/&gt;'))}"></span>
+                    </td>
                 </tr>
 
             </table>

@@ -1,6 +1,8 @@
 package org.word.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -356,17 +358,17 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             response.setDescription(String.valueOf(statusCodeInfo.get("description")));
 
 //            Map<String, Map> content = (Map) statusCodeInfo.get("content");
-            Map<String, Map> content = ((Map<String, Map>) statusCodeInfo.getOrDefault("content", new HashMap<>()))
-                    .entrySet()
-                    .stream().filter(e -> StringUtils.equals("application/json", e.getKey()))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            if (content != null) {
-//                try {
-//                    ResponseUtils.validateResponseKey(content);
-//                } catch (Exception e) {
-//                    throw new JsonProcessingException("response字段 " + entry.getKey() + "字段 " + e.getMessage()) {
-//                    };
-//                }
+            Map<String, Map> content = ((Map<String, Map>) statusCodeInfo.getOrDefault("content", new HashMap<>()));
+//                    .entrySet()
+//                    .stream()
+//                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if (!content.isEmpty()) {
+                try {
+                    ResponseUtils.validateResponseKey(content);
+                } catch (Exception e) {
+                    throw new JsonProcessingException("response字段 " + entry.getKey() + "字段 " + e.getMessage()) {
+                    };
+                }
                 // responses内容application多个遍历处理
                 Iterator<Map.Entry<String, Map>> applications = content.entrySet().iterator();
 
@@ -793,16 +795,16 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
         }
         String res = "";
         if (!headerMap.isEmpty()) {
-            res += "header: " + getHeaderByMap(headerMap) + " ";
+            res += "header: " + getHeaderByMap(headerMap) + "\n";
         }
         if (!pathMap.isEmpty()) {
-            res = "path: " + getPathVariableByMap(pathMap) + " ";
+            res = "path: " + getPathVariableByMap(pathMap) + "\n";
         }
         if (!queryMap.isEmpty()) {
-            res += "query: " + getUrlParamsByMap(queryMap) + " ";
+            res += "query: " + getUrlParamsByMap(queryMap) + "\n";
         }
         if (!jsonMap.isEmpty()) {
-            res += "body: ";
+            res += "body: \n";
             if (jsonMap.size() == 1) {
                 for (Entry<String, Object> entry : jsonMap.entrySet()) {
                     res += " '" + JsonUtils.writeJsonStr(entry.getValue()) + "'";
