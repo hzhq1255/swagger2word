@@ -1,8 +1,6 @@
 package org.word.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -131,7 +129,11 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
                         String title = String.valueOf(((List) content.get("tags")).get(0));
 
                         // 5.小标题 （方法说明）
-                        String tag = String.valueOf(content.get("operationId"));
+                        String operationId = String.valueOf(content.get("operationId"));
+                        String tag = String.valueOf(content.get("summary"));
+                        if (operationId != null) {
+                            tag = tag + "(" + operationId + ")";
+                        }
 
                         // 6.接口描述
                         Object descObj = content.get("description");
@@ -807,10 +809,10 @@ public class OpenApiWordServiceImpl implements OpenApiWordService {
             res += "body: \n";
             if (jsonMap.size() == 1) {
                 for (Entry<String, Object> entry : jsonMap.entrySet()) {
-                    res += " '" + JsonUtils.writeJsonStr(entry.getValue()) + "'";
+                    res += JsonUtils.writeJsonStr(entry.getValue());
                 }
             } else {
-                res += " '" + JsonUtils.writeJsonStr(jsonMap) + "'";
+                res += JsonUtils.writeJsonStr(jsonMap);
             }
             res += " ";
         }
